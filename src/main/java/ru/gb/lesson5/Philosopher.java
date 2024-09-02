@@ -1,20 +1,21 @@
 package ru.gb.lesson5;
 
-import java.util.Arrays;
 import java.util.Random;
 
 public class Philosopher extends Thread{
     private static final int MAX_EAT_COUNT = 3;
     private final String name;
-    private final Fork[] forks;
+    private Table table;
+    private Fork leftFork;
+    private Fork rightFork;
     private int eatCount;
-    private boolean isFed;
 
-    public Philosopher(String name, Fork[] forks) {
+    public Philosopher(String name, Fork leftFork, Fork rightFork, Table table) {
         this.name = name;
-        this.forks = forks;
+        this.leftFork = leftFork;
+        this.rightFork = rightFork;
+        this.table = table;
         eatCount = 0;
-        isFed = false;
     }
 
     @Override
@@ -23,64 +24,30 @@ public class Philosopher extends Thread{
             eat();
             think();
         }
+        System.out.printf("%S is fed enough%n", name);
     }
 
     private void eat() {
-//        тянемся к вилкам
+        boolean forksTaken;
+        do {
+            forksTaken = table.takeForks(leftFork, rightFork);
+        } while (!forksTaken);
+        System.out.printf("%S takes food %s time%n", name, ++eatCount);
         try {
-            Thread.sleep(new Random().nextInt(500));
+            Thread.sleep(500 + new Random().nextInt(500));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-//      если вилки доступны, берем и едим
-        if (areForksAvailable()) {
-            setForksAvailability(false);
-            eatCount++;
-            System.out.printf("%s takes food %s time%n", name, eatCount);
-            try {
-                Thread.sleep(new Random().nextInt(500));
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            isFed = true;
-            System.out.printf("%s finishes to take food %s time%n", name, eatCount);
-            setForksAvailability(true);
-        }
+        leftFork.setAvailable(true);
+        rightFork.setAvailable(true);
+        System.out.printf("%S puts forks and starts to ponder%n", name);
     }
 
-    private void think() {
-        if (isFed) {
-            System.out.printf("%s starts to ponder%n", name);
-            try {
-                Thread.sleep(new Random().nextInt(500));
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.printf("%s finishes to ponder%n", name);
-            isFed = false;
+    private void think(){
+        try {
+            Thread.sleep(500 + new Random().nextInt(500));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
-    }
-
-    private boolean areForksAvailable(){
-        for (Fork fork : forks) {
-            if (!fork.isAvailable().get()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void setForksAvailability(boolean available) {
-        for (Fork fork : forks) {
-            fork.setAvailable(available);
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "Philosopher{" +
-                "name='" + name + '\'' +
-                ", forks=" + Arrays.toString(forks) +
-                '}';
     }
 }

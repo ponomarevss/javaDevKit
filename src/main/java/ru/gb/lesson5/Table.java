@@ -9,11 +9,9 @@ package ru.gb.lesson5;
  * Можно брать только две вилки одновременно
  * Описать в виде кода такую ситуацию. Каждый философ должен поесть три раза
  */
-public class PhilosopherLunchtime {
-        private static final int PHILOSOPHERS_NUMBER = 3;
-        private static final String[] FORKS_NAMES = {"Alpha", "Bravo", "Charlie", "Delta", "Echo"};
+public class Table {
+        private static final int PHILOSOPHERS_NUMBER = 5;
         private static final String[] PHILOSOPHERS_NAMES = {"Aristotle", "BenedictSpinoza", "Confucius", "Descartes", "EmmanuelKant"};
-
         private final Fork[] forks = new Fork[PHILOSOPHERS_NUMBER];
         private final Philosopher[] philosophers = new Philosopher[PHILOSOPHERS_NUMBER];
 
@@ -25,9 +23,18 @@ public class PhilosopherLunchtime {
             }
         }
 
+        public synchronized boolean takeForks(Fork leftFork, Fork rightFork){
+            if (leftFork.isAvailable() && rightFork.isAvailable()) {
+                leftFork.setAvailable(false);
+                rightFork.setAvailable(false);
+                return true;
+            }
+            return false;
+        }
+
         private void initForks() {
             for (int i = 0; i < PHILOSOPHERS_NUMBER; i++) {
-                forks[i] = new Fork(FORKS_NAMES[i]);
+                forks[i] = new Fork();
             }
         }
 
@@ -35,9 +42,10 @@ public class PhilosopherLunchtime {
             for (int i = 0; i < PHILOSOPHERS_NUMBER; i++) {
                 philosophers[i] = new Philosopher(
                         PHILOSOPHERS_NAMES[i],
-                        new Fork[]{forks[i], forks[(i + 1) % PHILOSOPHERS_NUMBER]}
+                        forks[i],
+                        forks[(i + 1) % PHILOSOPHERS_NUMBER],
+                        this
                 );
             }
         }
-
 }
